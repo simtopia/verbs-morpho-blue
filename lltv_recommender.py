@@ -1,6 +1,8 @@
 import argparse
 import json
+import os
 
+import numpy as np
 import verbs
 
 from agents import ZERO_ADDRESS
@@ -23,10 +25,16 @@ OWNER = "0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa"
 
 
 def run_sim(
-    key: str, block_number: int, sigma: float, n_steps: int, n_borrow_agents: int
+    key: str,
+    block_number: int,
+    seed: int,
+    lltv: int,
+    sigma: float,
+    n_steps: int,
+    n_borrow_agents: int,
 ):
     fee = 3000
-    lltv = 9 * 10**17
+    lltv = lltv
 
     # ABIs
     swap_router_abi = verbs.abi.load_abi("abi/SwapRouter.abi")
@@ -284,13 +292,10 @@ def run_sim(
     # Run sim
     # -------------
     agents = [uniswap_agent] + borrow_agent + [liquidation_agent]
-    runner = verbs.sim.Sim(10, env, agents)
+    runner = verbs.sim.Sim(seed, env, agents)
     results = runner.run(n_steps=n_steps)
 
-    records_borrow_agents = [x[1 : (1 + n_borrow_agents)] for x in results]
-    plot_results_borrowers(dirname="results", records=records_borrow_agents)
-
-    return 0
+    return results
 
 
 if __name__ == "__main__":
@@ -316,10 +321,20 @@ if __name__ == "__main__":
     n_borrow_agents = args.n_borrow_agents
 
     # run simulation
-    run_sim(
-        key=key,
-        block_number=block_number,
-        sigma=sigma,
-        n_steps=n_steps,
-        n_borrow_agents=n_borrow_agents,
-    )
+    for lltv in [85 * 10**16, 9 * 10**17, 95 * 10**16]:
+        print(f"lltv={lltv / 10**18}")
+        results = run_sim(
+            key=key,
+            block_number=block_number,
+            seed=10,
+            lltv=lltv,
+            sigma=sigma,
+            n_steps=n_steps,
+            n_borrow_agents=n_borrow_agents,
+        )
+        records_borrow_agents = [x[1 : (1 + n_borrow_agents)] for x in results]
+        np.save(
+            os.path.join("results", f"sim_lltv{lltv / 10**18}.npy"),
+            np.array(records_borrow_agents),
+        )
+        plot_results_borrowers(dirname="results", records=records_borrow_agents)
