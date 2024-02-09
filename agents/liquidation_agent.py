@@ -82,7 +82,7 @@ class LiquidationAgent:
             borrowers_data.append((borrower, health_factor))
 
         # filter risky positions
-        risky_positions = filter(lambda x: x[1] < 0.995, borrowers_data)
+        risky_positions = filter(lambda x: x[1] < 0.98, borrowers_data)
 
         # TODO: do accountability to check whether it is profitable to liquidate
         # taking into account slippage of Uniswap
@@ -94,6 +94,7 @@ class LiquidationAgent:
             _debt_shares, collateral_assets = self.morpho_blue_abi.position.call(
                 env, self.address, self.morpho_blue_address, [self.id_market, borrower]
             )[0][1:]
+            print(f"health factor: {health_factor}")
 
             tx.append(
                 self.morpho_blue_abi.liquidate.transaction(

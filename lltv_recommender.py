@@ -321,7 +321,7 @@ if __name__ == "__main__":
     n_borrow_agents = args.n_borrow_agents
 
     # run simulation
-    for lltv in [85 * 10**16, 9 * 10**17, 95 * 10**16]:
+    for lltv in [9 * 10**17, 95 * 10**16]:
         print(f"lltv={lltv / 10**18}")
         results = run_sim(
             key=key,
@@ -337,4 +337,6 @@ if __name__ == "__main__":
             os.path.join("results", f"sim_lltv{lltv / 10**18}.npy"),
             np.array(records_borrow_agents),
         )
-        plot_results_borrowers(dirname="results", records=records_borrow_agents)
+        plot_results_borrowers(
+            dirname="results", records=records_borrow_agents, lltv=lltv / 10**18
+        )

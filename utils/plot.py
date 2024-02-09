@@ -6,7 +6,9 @@ import numpy as np
 
 
 def plot_results_borrowers(
-    records: List[List[Tuple[int, float, float, float, float]]], dirname: str
+    records: List[List[Tuple[int, float, float, float, float]]],
+    dirname: str,
+    lltv: float,
 ):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
@@ -51,6 +53,6 @@ def plot_results_borrowers(
     ax.set_ylabel("price")
     ax.legend()
     fig.tight_layout()
-    fig.savefig(os.path.join(dirname, "price.pdf"))
+    fig.savefig(os.path.join(dirname, "price_lltv{:.2f}.pdf".format(lltv / 10**18)))
 
     plt.close()
