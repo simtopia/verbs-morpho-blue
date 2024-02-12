@@ -14,14 +14,17 @@ from utils.mint_approve import mint_and_approve_dai, mint_and_approve_weth
 from utils.plot import plot_results_borrowers
 
 MORPHO_BLUE = "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb"
+ADAPTIVE_CURVE_IRM = "0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC"
+OWNER = "0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa"
+
 WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
 DAI_ADMIN = "0x9759A6Ac90977b93B58547b4A71c78317f391A28"
+
 UNISWAP_V3_FACTORY = "0x1F98431c8aD98523631AE4a59f267346ea31F984"
 UNISWAP_WETH_DAI = "0xC2e9F25Be6257c210d7Adf0D4Cd6E3E881ba25f8"
 SWAP_ROUTER = "0xE592427A0AEce92De3Edee1F18E0157C05861564"
-ADAPTIVE_CURVE_IRM = "0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC"
-OWNER = "0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa"
+UNISWAP_QUOTER = "0x61fFE014bA17989E743c5F6cB21bF9697530B21e"
 
 
 def run_sim(
@@ -37,23 +40,27 @@ def run_sim(
     lltv = lltv
 
     # ABIs
-    swap_router_abi = verbs.abi.load_abi("abi/SwapRouter.abi")
     dai_abi = verbs.abi.load_abi("abi/dai.abi")
     weth_erc20_abi = verbs.abi.load_abi("abi/WETHMintableERC20.abi")
-    uniswap_pool_abi = verbs.abi.load_abi("abi/UniswapV3Pool.abi")
+
     morpho_blue_abi = verbs.abi.load_abi("abi/MorphoBlue.abi")
     uniswap_aggregator_abi = verbs.abi.load_abi("abi/UniswapAggregator.abi")
     morpho_blue_snippets_abi = verbs.abi.load_abi("abi/MorphoBlueSnippets.abi")
 
+    swap_router_abi = verbs.abi.load_abi("abi/SwapRouter.abi")
+    uniswap_pool_abi = verbs.abi.load_abi("abi/UniswapV3Pool.abi")
+    quoter_abi = verbs.abi.load_abi("abi/Quoter_v2.abi")
+
     # convert addresses to bytes
-    morpho_blue_address = verbs.utils.hex_to_bytes(MORPHO_BLUE)
     weth_address = verbs.utils.hex_to_bytes(WETH)
     dai_address = verbs.utils.hex_to_bytes(DAI)
     dai_admin_address = verbs.utils.hex_to_bytes(DAI_ADMIN)
-    swap_router_address = verbs.utils.hex_to_bytes(SWAP_ROUTER)
-    uniswap_weth_dai_address = verbs.utils.hex_to_bytes(UNISWAP_WETH_DAI)
+    morpho_blue_address = verbs.utils.hex_to_bytes(MORPHO_BLUE)
     adaptive_curve_irm_address = verbs.utils.hex_to_bytes(ADAPTIVE_CURVE_IRM)
     owner_address = verbs.utils.hex_to_bytes(OWNER)
+    swap_router_address = verbs.utils.hex_to_bytes(SWAP_ROUTER)
+    uniswap_weth_dai_address = verbs.utils.hex_to_bytes(UNISWAP_WETH_DAI)
+    quoter_address = verbs.utils.hex_to_bytes(UNISWAP_QUOTER)
 
     # Fork mainenv
     env = verbs.envs.ForkEnv(
@@ -226,11 +233,18 @@ def run_sim(
         irm_address=adaptive_curve_irm_address,
         lltv=lltv,
         borrow_address=[agent.address for agent in borrow_agent],
+        quoter_address=quoter_address,
+        quoter_abi=quoter_abi,
+        swap_router_abi=swap_router_abi,
+        swap_router_address=swap_router_address,
+        uniswap_fee=fee,
+        uniswap_pool_abi=uniswap_pool_abi,
+        uniswap_pool_address=uniswap_weth_dai_address,
     )
 
     # mint and approve tokens for the liquidator agent
     # - Mint DAI and WETH
-    # - Approve the LiquidationSnippet to use these in their transactions
+    # - Approve Morpho Blue and Swap router to use their tokens
     mint_and_approve_dai(
         env=env,
         dai_abi=dai_abi,
@@ -238,7 +252,7 @@ def run_sim(
         contract_approved_address=morpho_blue_address,
         dai_admin_address=dai_admin_address,
         recipient=liquidation_agent.address,
-        amount=int(1e30),
+        amount=int(5e29),
     )
     mint_and_approve_weth(
         env=env,
@@ -246,7 +260,26 @@ def run_sim(
         weth_address=weth_address,
         recipient=liquidation_agent.address,
         contract_approved_address=morpho_blue_address,
-        amount=int(1e30),
+        amount=int(5e29),
+    )
+
+    mint_and_approve_dai(
+        env=env,
+        dai_abi=dai_abi,
+        dai_address=dai_address,
+        contract_approved_address=swap_router_address,
+        dai_admin_address=dai_admin_address,
+        recipient=liquidation_agent.address,
+        amount=int(5e29),
+    )
+
+    mint_and_approve_weth(
+        env=env,
+        weth_abi=weth_erc20_abi,
+        weth_address=weth_address,
+        recipient=liquidation_agent.address,
+        contract_approved_address=swap_router_address,
+        amount=int(5e29),
     )
 
     # ---------------
@@ -321,22 +354,21 @@ if __name__ == "__main__":
     n_borrow_agents = args.n_borrow_agents
 
     # run simulation
-    for lltv in [9 * 10**17, 95 * 10**16]:
-        print(f"lltv={lltv / 10**18}")
-        results = run_sim(
-            key=key,
-            block_number=block_number,
-            seed=10,
-            lltv=lltv,
-            sigma=sigma,
-            n_steps=n_steps,
-            n_borrow_agents=n_borrow_agents,
-        )
-        records_borrow_agents = [x[1 : (1 + n_borrow_agents)] for x in results]
-        np.save(
-            os.path.join("results", f"sim_lltv{lltv / 10**18}.npy"),
-            np.array(records_borrow_agents),
-        )
-        plot_results_borrowers(
-            dirname="results", records=records_borrow_agents, lltv=lltv / 10**18
-        )
+    lltv = 9 * 10**17
+    results = run_sim(
+        key=key,
+        block_number=block_number,
+        seed=10,
+        lltv=lltv,
+        sigma=sigma,
+        n_steps=n_steps,
+        n_borrow_agents=n_borrow_agents,
+    )
+    records_borrow_agents = [x[1 : (1 + n_borrow_agents)] for x in results]
+    np.save(
+        os.path.join("results", f"sim_lltv{lltv / 10**18}.npy"),
+        np.array(records_borrow_agents),
+    )
+    plot_results_borrowers(
+        dirname="results", records=records_borrow_agents, lltv=lltv / 10**18
+    )
