@@ -47,12 +47,11 @@ def plot_results_borrowers(
     fig.savefig(os.path.join(dirname, "collateral.pdf"))
 
     fig, ax = plt.subplots(figsize=(6, 3))
-    for i in range(n_borrow_agents):
-        ax.plot(records[:, i, 0], records[:, i, 4], label=f"Borrower {i}")
+    i = 0  # we just plot the price once
+    ax.plot(records[:, i, 0], records[:, i, 4], label=f"Borrower {i}")
     ax.set_xlabel("simulation step")
     ax.set_ylabel("price")
-    ax.legend()
     fig.tight_layout()
-    fig.savefig(os.path.join(dirname, "price_lltv{:.2f}.pdf".format(lltv / 10**18)))
+    fig.savefig(os.path.join(dirname, "price_lltv{:.2f}.pdf".format(lltv)))
 
     plt.close()

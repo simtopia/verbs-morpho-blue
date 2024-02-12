@@ -1,8 +1,6 @@
 import argparse
 import json
-import os
 
-import numpy as np
 import verbs
 
 from agents import ZERO_ADDRESS
@@ -366,10 +364,6 @@ if __name__ == "__main__":
         n_borrow_agents=n_borrow_agents,
     )
     records_borrow_agents = [x[1 : (1 + n_borrow_agents)] for x in results]
-    np.save(
-        os.path.join("results", f"sim_lltv{lltv / 10**18}.npy"),
-        np.array(records_borrow_agents),
-    )
     plot_results_borrowers(
         dirname="results", records=records_borrow_agents, lltv=lltv / 10**18
     )
