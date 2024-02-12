@@ -27,8 +27,7 @@ classifiers = [
 ]
 dependencies = [
   "verbs==0.1.0",
-  "matplotlib",
-  "ipython",
+  "matplotlib"
 ]
 
 [tool.hatch.metadata]
