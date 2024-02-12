@@ -121,7 +121,8 @@ class LiquidationAgent:
             # The liquidation did not go through because the position was actually healthy
             # Morpho Blue Snippets sometimes returns a Health Factor that does not
             # correspond to the output of the function `_is_Healthy`
-            # in https://github.com/morpho-org/morpho-blue/blob/129f8f9c0f65bc797fab93a6ba8e7046ca4490d3/src/Morpho.sol#L527
+            # in https://github.com/morpho-org/morpho-blue/blob/ \
+            # 129f8f9c0f65bc797fab93a6ba8e7046ca4490d3/src/Morpho.sol#L527
             return False
         debt_to_cover = decoded_liquidation_call_event[0]
         liquidated_collateral_amount = decoded_liquidation_call_event[2]
