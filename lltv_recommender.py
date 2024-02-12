@@ -35,7 +35,6 @@ def run_sim(
     n_borrow_agents: int,
 ):
     fee = 3000
-    lltv = lltv
 
     # ABIs
     dai_abi = verbs.abi.load_abi("abi/dai.abi")
