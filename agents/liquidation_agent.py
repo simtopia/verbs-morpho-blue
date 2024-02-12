@@ -29,6 +29,7 @@ class LiquidationAgent:
         quoter_address: bytes,
         swap_router_address: bytes,
         uniswap_fee: int,
+        hf_threshold: float,
     ):
 
         self.address = verbs.utils.int_to_address(i)
@@ -87,6 +88,9 @@ class LiquidationAgent:
         self.balance_collateral_asset = []
         self.balance_debt_asset = []
 
+        # HF threshold to look for liquidations
+        self.hf_threshold = hf_threshold
+
     def accountability(
         self,
         env,
@@ -109,39 +113,36 @@ class LiquidationAgent:
             self.morpho_blue_address,
             [self.market_params, liquidation_address, seized_assets, 0, b""],
         )[1]
-        if liquidation_call_event:
-            try:
-                decoded_liquidation_call_event = self.morpho_blue_abi.Liquidate.decode(
-                    liquidation_call_event[2][1]
-                )  # Liquidate event is the third event emitted
-            except eth_abi.exceptions.InsufficientDataBytes:
-                # The liquidation did not go through because the position was actually healthy
-                # Morpho Blue Snippets sometimes returns a Health Factor that does not
-                # correspond to the output of the function `_is_Healthy`
-                # in https://github.com/morpho-org/morpho-blue/blob/129f8f9c0f65bc797fab93a6ba8e7046ca4490d3/src/Morpho.sol#L527
-                return False
-            debt_to_cover = decoded_liquidation_call_event[0]
-            liquidated_collateral_amount = decoded_liquidation_call_event[2]
-
-            quote = self.quoter_abi.quoteExactOutputSingle.call(
-                env,
-                self.address,
-                self.quoter_address,
-                [
-                    (
-                        self.token_a_address,
-                        self.token_b_address,
-                        debt_to_cover,
-                        self.uniswap_fee,
-                        0,
-                    )
-                ],
-            )[0]
-            amount_collateral_from_swap = quote[0]
-
-            return amount_collateral_from_swap < liquidated_collateral_amount
-        else:
+        try:
+            decoded_liquidation_call_event = self.morpho_blue_abi.Liquidate.decode(
+                liquidation_call_event[2][1]
+            )  # Liquidate event is the third event emitted
+        except eth_abi.exceptions.InsufficientDataBytes:
+            # The liquidation did not go through because the position was actually healthy
+            # Morpho Blue Snippets sometimes returns a Health Factor that does not
+            # correspond to the output of the function `_is_Healthy`
+            # in https://github.com/morpho-org/morpho-blue/blob/129f8f9c0f65bc797fab93a6ba8e7046ca4490d3/src/Morpho.sol#L527
             return False
+        debt_to_cover = decoded_liquidation_call_event[0]
+        liquidated_collateral_amount = decoded_liquidation_call_event[2]
+
+        quote = self.quoter_abi.quoteExactOutputSingle.call(
+            env,
+            self.address,
+            self.quoter_address,
+            [
+                (
+                    self.token_a_address,
+                    self.token_b_address,
+                    debt_to_cover,
+                    self.uniswap_fee,
+                    0,
+                )
+            ],
+        )[0]
+        amount_collateral_from_swap = quote[0]
+
+        return amount_collateral_from_swap < liquidated_collateral_amount
 
     def update(self, rng: np.random.Generator, env) -> List:
 
@@ -176,7 +177,7 @@ class LiquidationAgent:
             borrowers_data.append((borrower, health_factor))
 
         # filter risky positions
-        risky_positions = filter(lambda x: x[1] < 0.98, borrowers_data)
+        risky_positions = filter(lambda x: x[1] < self.hf_threshold, borrowers_data)
 
         # filter those positions for which liquidating is profitable
         liquidatable_positions = filter(

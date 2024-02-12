@@ -240,6 +240,7 @@ def run_sim(
         uniswap_fee=fee,
         uniswap_pool_abi=uniswap_pool_abi,
         uniswap_pool_address=uniswap_weth_dai_address,
+        hf_threshold=0.99,
     )
 
     # mint and approve tokens for the liquidator agent
