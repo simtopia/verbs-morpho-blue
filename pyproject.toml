@@ -26,9 +26,8 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "verbs",
-  "matplotlib",
-  "ipython"
+  "verbs==0.1.0",
+  "matplotlib"
 ]
 
 [tool.hatch.metadata]
