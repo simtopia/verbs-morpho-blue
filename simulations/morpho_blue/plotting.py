@@ -1,21 +1,25 @@
 import os
-from typing import List, Tuple
+from pathlib import Path
+from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+PATH = Path(__file__).parent
+
 
 def plot_results_borrowers(
-    records: List[List[Tuple[int, float, float, float, float]]],
-    dirname: str,
+    records: List[List],
     lltv: float,
+    n_borrow_agents: int,
 ):
+    dirname = os.path.join(PATH, "results")
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
     n_steps = len(records)
+    records = [x[1 : (1 + n_borrow_agents)] for x in records]
     records = np.array(records).reshape(n_steps, -1, 5)
-    n_borrow_agents = records.shape[1]
 
     fig, ax = plt.subplots(figsize=(6, 3))
     for i in range(n_borrow_agents):
