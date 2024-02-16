@@ -18,7 +18,7 @@ def plot_results_borrowers(
         os.makedirs(dirname)
 
     n_steps = len(records)
-    records = [x[1 : (1 + n_borrow_agents)] for x in records]
+    records = [x[1 : 1 + n_borrow_agents] for x in records]
     records = np.array(records).reshape(n_steps, -1, 5)
 
     fig, ax = plt.subplots(figsize=(6, 3))

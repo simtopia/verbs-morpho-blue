@@ -3,9 +3,9 @@ from functools import partial
 from pathlib import Path
 
 import verbs
+from verbs.utils import ZERO_ADDRESS
 
 from simulations import abi
-from simulations.agents import ZERO_ADDRESS
 from simulations.agents.borrow_agent import BorrowAgent
 from simulations.agents.liquidation_agent import LiquidationAgent
 from simulations.agents.supply_agent import SupplyAgent
@@ -163,27 +163,26 @@ def runner(
     # ----------------
     # Borrower
     # ----------------
-    borrow_agent = []
-    for i in range(n_borrow_agents):
-        borrow_agent.append(
-            BorrowAgent(
-                env=env,
-                i=100 + i,
-                morpho_blue_abi=abi.morpho_blue,
-                morpho_blue_snippets_abi=abi.morpho_blue_snippets,
-                morpho_blue_address=morpho_blue_address,
-                morpho_blue_snippets_address=morpho_blue_snippets_address,
-                mintable_erc20_abi=abi.weth_erc20,
-                oracle_abi=abi.uniswap_aggregator,
-                token_a_address=weth_address,
-                token_b_address=dai_address,
-                oracle_address=uniswap_aggregator_address,
-                irm_address=adaptive_curve_irm_address,
-                lltv=lltv,
-                activation_rate=0.8,
-                initial_ltv=0.75,
-            )
+    borrow_agent = [
+        BorrowAgent(
+            env=env,
+            i=100 + i,
+            morpho_blue_abi=abi.morpho_blue,
+            morpho_blue_snippets_abi=abi.morpho_blue_snippets,
+            morpho_blue_address=morpho_blue_address,
+            morpho_blue_snippets_address=morpho_blue_snippets_address,
+            mintable_erc20_abi=abi.weth_erc20,
+            oracle_abi=abi.uniswap_aggregator,
+            token_a_address=weth_address,
+            token_b_address=dai_address,
+            oracle_address=uniswap_aggregator_address,
+            irm_address=adaptive_curve_irm_address,
+            lltv=lltv,
+            activation_rate=0.8,
+            initial_ltv=0.75,
         )
+        for i in range(n_borrow_agents)
+    ]
     for i in range(n_borrow_agents):
         mint_and_approve_weth(
             env=env,
