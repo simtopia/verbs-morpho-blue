@@ -23,7 +23,7 @@ The script `lltv_recommender.py` runs the following simulation:
     - LLTV = 0.9
     - Collateral asset: WETH
     - Borrow asset: DAI
-    - Oracle: price feed is retrieved from Uniswap pool. Oracle implemented [here](./abi/UniswapAggregator.sol)
+    - Oracle: price feed is retrieved from Uniswap pool. Oracle implemented [here](./simulations/abi/UniswapAggregator.sol)
 - A liquidity provider provides DAI to the above market.
 - Borrowers borrow from the market.
 - A trader trades in Uniswap so that the price from Uniswap follows a Geometric Brownian motion.
