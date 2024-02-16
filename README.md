@@ -18,7 +18,7 @@ to the scripts.
 
 ## Simulation
 The script `lltv_recommender.py` runs the following simulation:
-- Fork mainnet at block `block_number`, which is by default 19163600, but can be specified when executing the script.
+- Fork mainnet at block 19163600.
 - Create a market on Morpho Blue with
     - LLTV = 0.9
     - Collateral asset: WETH
@@ -28,5 +28,8 @@ The script `lltv_recommender.py` runs the following simulation:
 - Borrowers borrow from the market.
 - A trader trades in Uniswap so that the price from Uniswap follows a Geometric Brownian motion.
 - A liquidator liquidates unhealthy positions.
+
+> [!NOTE]
+> The above simulation runs from a pre-generated cache of the EVM forked at block 19163600 (see the [documentation](https://simtopia.github.io/verbs/pages/verbs.envs.ForkEnv.html)). The function [`init_cache(...)`](./simulations/morpho_blue/sim.py#320) initialises the cache at the specified block.
 
 Simulation results are saved in `results/`.
