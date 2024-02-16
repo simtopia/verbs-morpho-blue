@@ -30,6 +30,6 @@ The script `lltv_recommender.py` runs the following simulation:
 - A liquidator liquidates unhealthy positions.
 
 > [!NOTE]
-> The above simulation runs from a pre-generated cache of the EVM forked at block 19163600 (see the [documentation](https://simtopia.github.io/verbs/pages/verbs.envs.ForkEnv.html)). The function [`init_cache(...)`](./simulations/morpho_blue/sim.py#320) initialises the cache at the specified block.
+> The above simulation runs from a pre-generated cache of the EVM forked at block 19163600 (see the [documentation](https://simtopia.github.io/verbs/pages/verbs.envs.ForkEnv.html)). In order to generate a simulation starting from a different block, the function [`init_cache(...)`](./simulations/morpho_blue/sim.py#L320) initialises the cache at the specified block.
 
 Simulation results are saved in `results/`.
